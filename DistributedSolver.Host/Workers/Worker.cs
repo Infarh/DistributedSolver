@@ -1,4 +1,4 @@
-namespace DistributedSolver.Host;
+namespace DistributedSolver.Host.Workers;
 
 public class Worker(ILogger<Worker> logger) : BackgroundService
 {

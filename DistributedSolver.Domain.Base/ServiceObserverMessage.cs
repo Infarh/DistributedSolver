@@ -36,7 +36,7 @@ public readonly record struct ServiceObserverMessage(
         return stream.ToArray();
     }
 
-    public static async ValueTask<ServiceObserverMessage> DeserializeAsync(byte[] data, CancellationToken Cancel)
+    public static async ValueTask<ServiceObserverMessage> DeserializeAsync(byte[] data, CancellationToken Cancel = default)
     {
         using var stream = new MemoryStream(data);
         var msg = await JsonSerializer.DeserializeAsync<ServiceObserverMessage>(stream, __JsonOpt, Cancel).ConfigureAwait(false);

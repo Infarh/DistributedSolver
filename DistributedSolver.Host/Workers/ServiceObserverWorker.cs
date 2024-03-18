@@ -26,10 +26,17 @@ public class ServiceObserverWorker(
 
     private async Task ListenAsync(int port, CancellationToken Cancel)
     {
-        using var udp = new UdpClient(_Port)
-        {
-            EnableBroadcast = true,
-        };
+        using var udp = new UdpClient().WithSharedPort(_Port);
+        //{
+        //    MulticastLoopback = true,
+        //};
+
+        udp.MulticastLoopback = false;
+        udp.EnableBroadcast = true;
+
+        //udp.JoinMulticastGroup(IPAddress.Broadcast);
+
+        //udp.JoinMulticastGroup()
 
         //udp.Client.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
         //udp.ExclusiveAddressUse = false;
@@ -73,15 +80,25 @@ public class ServiceObserverWorker(
 
     private async ValueTask ProcessMessageAsync(UdpClient client, ServiceObserverMessage message, IPAddress address, CancellationToken Cancel)
     {
+        Logger.LogInformation("Получено сообщение (от {address}): {msg}", address, message);
+
         switch (message.Message)
         {
             default:
                 break;
 
             case "request":
+                Logger.LogInformation("Получен запрос на обнаружение сервиса");
+
                 var msg = new ServiceObserverMessage("response");
                 var bytes = await msg.ToByteArrayAsync(Cancel).ConfigureAwait(false);
-                await client.SendAsync(bytes, new IPEndPoint(address, _Port), Cancel).ConfigureAwait(false);
+
+                Logger.LogInformation("Отправляю ответ");
+                //await client.SendAsync(bytes, new IPEndPoint(IPAddress.Broadcast, _Port), Cancel).ConfigureAwait(false);
+                using(var udp = new UdpClient())
+                {
+                    await udp.SendAsync(bytes, new IPEndPoint(address, _Port), Cancel).ConfigureAwait(false);
+                }
                 break;
         }
     }
